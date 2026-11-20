@@ -1,0 +1,38 @@
+Branch-specific rate reconstruction: fixed-tree screening benchmark
+
+100 tips; 20 binary characters per dataset; 50 maps per character.
+Root age 150 Ma; focal 76 young branches versus 70 other young branches.
+Root states have equal frequencies. No pruning or character filtering.
+Baseline q=0.002/Myr; accelerated focal q=0.020/Myr.
+Each character reconstructed with a separate homogeneous ER fit.
+Intervals are conditional map quantiles, not calibrated confidence intervals.
+
+Homogeneous
+  Datasets: 30
+  Median inferred focal/reference ratio: 1.0298 (range 0.6130-1.2400)
+  Median young-branch AUC: 0.4977 (range 0.3583-0.5927)
+  Conditional difference interval excludes zero: 9/30
+  Exact binomial 95% interval for this frequency: 0.1473-0.4940
+  Conditional interval entirely positive: 1/30
+  Conditional ratio interval covers the generating ratio: 21/30
+  Invariant tip-pattern characters retained: 0
+  Median correlation with realized branch rates: 0.8033
+
+10-fold acceleration
+  Datasets: 30
+  Median inferred focal/reference ratio: 4.1005 (range 2.9638-5.0405)
+  Median young-branch AUC: 0.9145 (range 0.8867-0.9547)
+  Conditional difference interval excludes zero: 30/30
+  Exact binomial 95% interval for this frequency: 0.8843-1.0000
+  Conditional interval entirely positive: 30/30
+  Conditional ratio interval covers the generating ratio: 0/30
+  Invariant tip-pattern characters retained: 0
+  Median correlation with realized branch rates: 0.8117
+
+Interpretation:
+AUC assesses localization among young branches, not calibrated branch-wise significance.
+Rate magnitude and coverage must be assessed separately from localization.
+The null frequency above assesses this fixed design; it is not a universal error guarantee.
+Thirty datasets per condition cannot establish precise tail error rates.
+The benchmark does not vary tree topology, taxon sampling, resolution or character dependence.
+No thresholds were tuned against the results, and no failed datasets were removed.

@@ -12,6 +12,9 @@
 #' Discretized maps can omit transitions; counting stacked-state transitions
 #' does not in general count all component-character changes.
 #' @author Sergei Tarasov
+#' @examples
+#' data("hym_stm")
+#' head(count_branch_changes(hym_stm[[1]][[1]]))
 #' @md
 #' @export
 count_branch_changes <- function(simmap) {
@@ -31,6 +34,11 @@ count_branch_changes <- function(simmap) {
 #' @return A list of numeric vectors, one per map replicate, in tree edge order.
 #' @seealso [count_branch_changes()], [ama_branches_multi_char()]
 #' @author Sergei Tarasov
+#' @examples
+#' data("hym_stm")
+#' maps <- hym_stm[[1]][1:3]
+#' samples <- get_branch_rate_sample_smaps(maps)
+#' head(samples[[1]])
 #' @md
 #' @export
 get_branch_rate_sample_smaps <- function(smaps) {
@@ -65,6 +73,11 @@ get_branch_rate_sample_smaps <- function(smaps) {
 #'   These are mapped change rates conditional on the supplied histories,
 #'   not separately fitted branch-specific Q matrices.
 #' @author Sergei Tarasov
+#' @examples
+#' data("hym_stm")
+#' maps <- hym_stm[1:2]
+#' samples <- ama_branches_multi_char(maps)
+#' head(samples[[1]])
 #' @md
 #' @export
 ama_branches_multi_char <- function(list.of.chars) {
@@ -107,6 +120,10 @@ ama_branches_multi_char <- function(list.of.chars) {
 #'   conditional on the tree, model and observations used to sample histories.
 #'   With fixed Q and tree, they do not include parameter or tree uncertainty.
 #' @author Sergei Tarasov
+#' @examples
+#' data("hym_stm")
+#' head(summarize_branch_rates(hym_stm[[1]], stat = "mean"))
+#' head(summarize_branch_rates_multi(hym_stm[1:2], stat = "mean"))
 #' @md
 #' @export
 summarize_branch_rates <- function(multi_simmap,
@@ -150,6 +167,10 @@ summarize_branch_rates_multi <- function(list.of.chars,
 #'   limiting rates. The root stem, if supplied, is not included.
 #'   This is a mean over sampled lineages, not the sum of their rates.
 #' @author Sergei Tarasov
+#' @examples
+#' tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+#' branch_rate_thru_time(tree, c(1, 2, 3, 1),
+#'                        time_points = c(2, 1, 0), time_scale = "age")
 #' @md
 #' @export
 branch_rate_thru_time <- function(tree, branch_rate, n_points = 100,
@@ -214,6 +235,12 @@ branch_rate_thru_time <- function(tree, branch_rate, n_points = 100,
 #'   `summary`. Bounds are pointwise 2.5% and 97.5% map quantiles.
 #' @seealso [branch_rates()]
 #' @author Sergei Tarasov
+#' @examples
+#' tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+#' samples <- list(c(1, 2, 3, 1), c(1, 3, 2, 1))
+#' curves <- branch_rate_thru_time_Multi(tree, samples, n_points = 5,
+#'                                       return_samples = TRUE)
+#' curves$summary
 #' @md
 #' @export
 branch_rate_thru_time_Multi <- function(tree, replicate_list, n_points = 100,
@@ -261,6 +288,9 @@ branch_rate_thru_time_Multi <- function(tree, replicate_list, n_points = 100,
 #'
 #' @inheritParams ama_branches_multi_char
 #' @inheritParams branch_rate_thru_time
+#' @param list.of.chars A named list of original character maps, or an
+#'   `ontophylo_stm` result from [paramo_stm()]. The latter reads one character's
+#'   counts at a time and also supports runs storing only branch counts.
 #' @param marginal Also calculate marginal rates through time. Set FALSE for
 #'   branch-only reconstruction, including on non-ultrametric trees.
 #' @return A list containing `tree`, `characters`, `n_characters`, `n_maps`,
@@ -296,13 +326,29 @@ branch_rates <- function(list.of.chars, n_points = 100, time_points = NULL,
   if (!is.logical(marginal) || length(marginal) != 1L || is.na(marginal)) {
     stop("marginal must be TRUE or FALSE.", call. = FALSE)
   }
-  samples <- ama_branches_multi_char(list.of.chars)
-  first.maps <- .check_branch_maps(list.of.chars[[1]])
-  first.tree <- first.maps[[1]]
+  if (inherits(list.of.chars, "ontophylo_stm")) {
+    first.tree <- list.of.chars$tree
+    characters <- names(list.of.chars$characters)
+    total <- matrix(0, nrow(first.tree$edge), list.of.chars$settings$n_stm)
+    for (id in characters) {
+      one <- read_stm(list.of.chars, characters = id, type = "branch_counts")[[1]]
+      if (!identical(dim(one), dim(total)) || any(!is.finite(one)) ||
+          any(one < 0) || any(one != floor(one))) {
+        stop("Invalid branch-count samples.", call. = FALSE)
+      }
+      total <- total + one
+    }
+    samples <- vector("list", ncol(total))
+    for (i in seq_along(samples)) samples[[i]] <- total[, i] / first.tree$edge.length
+  } else {
+    samples <- ama_branches_multi_char(list.of.chars)
+    first.maps <- .check_branch_maps(list.of.chars[[1]])
+    first.tree <- first.maps[[1]]
+    characters <- names(list.of.chars)
+  }
   tree <- list(edge = first.tree$edge, edge.length = first.tree$edge.length,
                tip.label = first.tree$tip.label, Nnode = first.tree$Nnode)
   class(tree) <- "phylo"
-  characters <- names(list.of.chars)
   if (is.null(characters)) {
     characters <- paste0("char_", seq_along(list.of.chars))
   }
@@ -322,7 +368,7 @@ branch_rates <- function(list.of.chars, n_points = 100, time_points = NULL,
     marginal_summary <- marginal_result$summary
   }
   list(tree = tree, characters = characters,
-       n_characters = length(list.of.chars), n_maps = length(samples),
+       n_characters = length(characters), n_maps = length(samples),
        rate_samples = rate_samples, branch_summary = branch_summary,
        marginal_samples = marginal_samples, marginal_summary = marginal_summary)
 }

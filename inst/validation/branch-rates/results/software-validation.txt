@@ -1,0 +1,11 @@
+Software validation
+
+The development package builds with its vignette.
+All installed-package test assertions passed with no test warnings or skips.
+The installed help examples for 14 functions passed; read_stm is additionally exercised by the executable vignette and integration tests.
+The full vignette and its extracted standalone R script execute successfully.
+
+R CMD check still reports the pre-existing legacy add_pseudodata example failure, plus existing package documentation/metadata warnings and notes.
+Data compression and ASCII audits were disabled for the unchanged legacy datasets; the vignette was built and its R code was checked.
+
+No benchmark outcomes were filtered and no thresholds were tuned after inspecting recovery.

@@ -42,6 +42,11 @@ Quantiles describe the distribution of reconstructed mapped rates,
 conditional on the tree, model and observations used to sample histories.
 With fixed Q and tree, they do not include parameter or tree uncertainty.
 }
+\examples{
+data("hym_stm")
+head(summarize_branch_rates(hym_stm[[1]], stat = "mean"))
+head(summarize_branch_rates_multi(hym_stm[1:2], stat = "mean"))
+}
 \author{
 Sergei Tarasov
 }

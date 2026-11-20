@@ -31,6 +31,12 @@ distribution. Do not include the same character twice.
 These are mapped change rates conditional on the supplied histories,
 not separately fitted branch-specific Q matrices.
 }
+\examples{
+data("hym_stm")
+maps <- hym_stm[1:2]
+samples <- ama_branches_multi_char(maps)
+head(samples[[1]])
+}
 \author{
 Sergei Tarasov
 }

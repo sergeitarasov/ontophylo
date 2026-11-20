@@ -20,9 +20,10 @@ Encoding: UTF-8
 Language: en-US
 URL: https://github.com/diegosasso/ontophylo
 BugReports: https://github.com/diegosasso/ontophylo/issues
-Depends: R (>= 3.5.0)
-Imports: magrittr, dplyr, tidyr, tibble, ggplot2, stringdist, phytools, ape, purrr, ontologyIndex, RColorBrewer, grid, truncnorm, fANCOVA
+Depends: R (>= 3.6.0)
+Imports: magrittr, dplyr, tidyr, tibble, ggplot2, stringdist, phytools (>= 2.5-2), corHMM (>= 2.8), digest, R.utils, parallel, ape, purrr, ontologyIndex, RColorBrewer, grid, truncnorm, fANCOVA
 Suggests: 
+    expm,
     grImport,
     rmarkdown,
     knitr,

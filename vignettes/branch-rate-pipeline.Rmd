@@ -1,0 +1,370 @@
+---
+title: "From character histories to branch-specific and marginal rates"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{From character histories to branch-specific and marginal rates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+                      fig.height = 4.5, dpi = 140)
+library(ontophylo)
+```
+
+This workflow estimates mapped change rates for a combined character or an
+anatomical group. Each character is first fitted and mapped separately. For each
+map replicate, its changes are counted on each branch; counts are summed across
+the selected characters and divided by branch duration. Marginal rates average
+these branch rates across the sampled lineages present at each age.
+
+The branch-specific estimator retains Sergei Tarasov's Hymenoptera functions.
+`branch_rate_pipeline()` adds group handling, normalization, predefined branch
+comparisons and a consistent final result. It does not require discretizing
+histories or constructing a stacked-state map.
+
+## Pipeline and function names
+
+```{r workflow, echo=FALSE, fig.width=8.2, fig.height=8, fig.cap="The full pipeline. Branch and marginal summaries retain map replicates until the final statistical summary. Anatomical groups are processed separately."}
+grid::grid.newpage()
+box <- function(x, y, width, height, label, fill = "#E1F1FC") {
+  grid::grid.roundrect(x, y, width, height, r = grid::unit(0.035, "snpc"),
+                       gp = grid::gpar(fill = fill, col = "#555555"))
+  # Generic sans works with both HTML rendering and R's default PDF device.
+  grid::grid.text(label, x, y, gp = grid::gpar(fontsize = 10, fontfamily = "sans"))
+}
+arrow <- function(x0, y0, x1, y1) {
+  grid::grid.lines(c(x0, x1), c(y0, y1),
+                   arrow = grid::arrow(length = grid::unit(2, "mm")),
+                   gp = grid::gpar(col = "#555555"))
+}
+box(0.5, 0.94, 0.64, 0.065, "Dated tree + observations for each character", "#F3F3F3")
+box(0.5, 0.83, 0.76, 0.075, "fit_models()\nCompare Q models independently for each character")
+box(0.5, 0.71, 0.76, 0.075, "paramo_stm()\nSample histories using the fitted Q and root setting")
+box(0.5, 0.59, 0.76, 0.075, "read_stm()\nRead a named list of original character-map samples")
+box(0.5, 0.45, 0.90, 0.105,
+     "branch_rate_pipeline()\nCharacter groups + optional per-character normalization\nama_branches_multi_char(): combined branch-rate samples", "#FFF2D5")
+box(0.165, 0.265, 0.30, 0.13,
+     "Branch summaries\nsummarize_branch_rates_multi()\nMean, median, SD, quantiles")
+box(0.5, 0.265, 0.30, 0.13,
+     "Marginal rates\nbranch_rate_thru_time_Multi()\nReplicate curves + summaries")
+box(0.835, 0.265, 0.30, 0.13,
+     "Predefined clade comparisons\nbranch_rate_contrast()\nReplicate differences + ratios")
+box(0.165, 0.08, 0.30, 0.09, "plot_branch_colored_tree()\nBranch-rate tree", "#F3F3F3")
+box(0.5, 0.08, 0.30, 0.09, "plot_marginal_rates()\nCurve + mapping interval", "#F3F3F3")
+arrow(0.5, 0.906, 0.5, 0.87)
+arrow(0.5, 0.791, 0.5, 0.75)
+arrow(0.5, 0.671, 0.5, 0.63)
+arrow(0.5, 0.551, 0.5, 0.506)
+arrow(0.30, 0.396, 0.165, 0.333)
+arrow(0.50, 0.396, 0.50, 0.333)
+arrow(0.70, 0.396, 0.835, 0.333)
+arrow(0.165, 0.198, 0.165, 0.128)
+arrow(0.50, 0.198, 0.50, 0.128)
+```
+
+The diagram names the public entry points. Internally, the higher-order wrapper
+summarizes already computed rate samples, so it does not repeat amalgamation.
+`branch_rate_thru_time_Multi()` calls `branch_rate_thru_time()` separately for
+each replicate before calculating uncertainty.
+
+| Function | Role |
+|:--|:--|
+| `fit_models()` | Fit and compare candidate Q models per character. |
+| `paramo_stm()` | Sample conditional stochastic histories, optionally in batches on disk. |
+| `read_stm()` | Load complete selections of maps from the mapping result. |
+| `count_branch_changes()` | Count changes on each branch of one original map. |
+| `get_branch_rate_sample_smaps()` | Obtain branch-rate samples for one character. |
+| `ama_branches_multi_char()` | Sum branch rates across characters within each replicate. |
+| `summarize_branch_rates()` | Summarize a single character across its maps. |
+| `summarize_branch_rates_multi()` | Summarize a combined character across its maps. |
+| `branch_rate_thru_time()` | Marginalize one branch-rate vector through time. |
+| `branch_rate_thru_time_Multi()` | Marginalize all replicates and summarize the curves. |
+| `branch_rates()` | Return branch and marginal results for one combined character. |
+| `branch_rate_pipeline()` | Run selected anatomical groups, normalization and comparisons. |
+| `branch_rate_contrast()` | Compare two predefined, disjoint branch sets within each replicate. |
+| `plot_branch_colored_tree()` | Display branch values on a tree. |
+| `plot_marginal_rates()` | Display a marginal curve with pointwise map intervals. |
+
+## Fit models and sample histories
+
+The following small example is executable. The rows identify taxa, and each
+column is a separate binary character. In this example all characters are
+variable; inspect the fitting and mapping status tables before analyzing a new
+dataset. Failed or skipped characters must not disappear silently.
+
+```{r fit-models}
+tree <- ape::read.tree(text =
+  "(((a:1,b:1):1,(c:1,d:1):1):1,((e:1,f:1):1,(g:1,h:1):1):1);")
+characters <- cbind(
+  char1 = c("0", "0", "0", "0", "1", "1", "1", "1"),
+  char2 = c("0", "0", "1", "1", "0", "0", "1", "1"),
+  char3 = c("1", "1", "0", "0", "0", "0", "1", "1"))
+rownames(characters) <- tree$tip.label
+
+fits <- fit_models(tree, characters, models = c("ER", "SYM", "ARD"),
+                    root_p = "equal", criterion = "AICc", nstarts = 0,
+                    seed = 101, on_error = "stop")
+fits$status
+fits$characters$char1$model_table
+
+mapped <- paramo_stm(fits, n_stm = 25, batch_size = 10,
+                      seed = 102, on_error = "stop")
+mapped$status
+maps <- read_stm(mapped)
+names(maps)
+```
+
+The same root setting is carried from fitting to mapping. Binary ER and SYM
+represent the same model and are not fitted twice. Model selection and fixed-Q
+mapping do not propagate uncertainty in Q or model choice into the subsequent
+mapping intervals. See the fitting help pages for custom Q index matrices,
+missing and ambiguous observations, and checkpoint/resumption settings.
+
+If maps were generated elsewhere, supply the same structure directly:
+`list(char1 = maps_for_char1, char2 = maps_for_char2)`. For example,
+`phytools::make.simmap()` supplies each character's map list. These must be the
+original maps, before discretization or stacked-state amalgamation.
+
+## One call from maps to final outputs
+
+```{r high-order-wrapper}
+groups <- list(combined = names(maps), region_A = c("char1", "char2"),
+                region_B = c("char2", "char3"))
+result <- branch_rate_pipeline(maps, groups = groups, normalize = "characters",
+                                time_points = seq(3, 0, by = -0.1),
+                                time_scale = "age")
+result$group_summary
+head(result$branch_summary)
+head(result$marginal_summary)
+
+combined <- result$groups$combined
+dim(combined$rate_samples)       # branches x map replicates
+dim(combined$marginal_samples)   # ages x map replicates
+```
+
+The mapping result can also be passed directly. This reads one character's
+branch-count samples at a time and supports disk-backed or count-only runs:
+
+```{r direct-mapping-result}
+direct <- branch_rate_pipeline(mapped, groups, normalize = "characters",
+                                time_points = seq(3, 0, by = -0.1),
+                                time_scale = "age")
+stopifnot(isTRUE(all.equal(direct$branch_summary, result$branch_summary)))
+```
+
+Count-only storage is sufficient for branch-specific and marginal rates, but
+cannot reproduce the transition times required by stacked-map analyses.
+
+`region_A` and `region_B` overlap in `char2`. They are separate results; they
+are never summed to produce the combined group. The combined group explicitly
+contains the three unique characters. A named list returned by `RAC_query()`
+can be used as `groups` when all of its character IDs occur in `maps`.
+
+With `normalize = "none"`, rates are total character changes per time unit.
+With `normalize = "characters"`, samples, means, SDs and interval bounds are
+all divided by the number of characters in their group. This makes units
+comparable across differently sized groups; it does not correct differences
+in state spaces or data quality.
+
+## Every lower-level function
+
+For branch b, character c and map replicate m, let N be the reconstructed
+number of changes and L the branch duration. The combined rate is
+
+\[
+r_{bm} = \frac{\sum_c N_{bcm}}{L_b}.
+\]
+
+This estimates a realized mapped change rate, rather than fitting a separate
+Q matrix to each branch. Reversals are counted. Adjacent segments labelled
+with the same state do not create a change.
+
+```{r count-and-amalgamate}
+counts <- count_branch_changes(maps$char1[[1]])
+head(counts)
+
+one_character <- get_branch_rate_sample_smaps(maps$char1)
+head(one_character[[1]])
+
+combined_samples <- ama_branches_multi_char(maps)
+head(combined_samples[[1]])
+
+single_mean <- summarize_branch_rates(maps$char1, stat = "mean")
+combined_mean <- summarize_branch_rates_multi(maps, stat = "mean")
+combined_bounds <- summarize_branch_rates_multi(maps, stat = "quantile",
+                                                probs = c(0.025, 0.975))
+head(single_mean)
+head(combined_mean)
+combined_bounds[, 1:4, drop = FALSE]
+```
+
+For one replicate, the marginal rate is the mean of the rates of branches
+present at a specified age. The number of contributing branches is returned.
+It is important to marginalize each replicate first: averaging branch-level
+interval endpoints does not give the marginal interval.
+
+```{r marginal-functions}
+one_curve <- branch_rate_thru_time(tree, combined_samples[[1]],
+                                   time_points = c(3, 2.5, 2, 1, 0),
+                                   time_scale = "age")
+one_curve
+
+curves <- branch_rate_thru_time_Multi(tree, combined_samples,
+                                      time_points = seq(3, 0, by = -0.1),
+                                      time_scale = "age", return_samples = TRUE)
+head(curves$summary)
+
+one_combined_character <- branch_rates(maps, n_points = 31)
+head(one_combined_character$branch_summary)
+```
+
+The default `time_scale = "root"` preserves the original interface: supplied
+times are elapsed from the root. `time_scale = "age"` accepts ages before the
+present. Returned `time` always means age before the present. At an internal
+node, descendant branches contribute instead of their ancestor; at the present,
+terminal branches contribute their limiting rates. Marginal reconstruction
+requires a rooted ultrametric tree. Branch-only reconstruction is available
+with `marginal = FALSE`.
+
+## Predefined clade contrasts
+
+Define focal and reference branches before examining inferred rates. The
+example below compares the terminal branches of two named tip groups. It
+illustrates the interface, rather than a biological hypothesis about this toy
+dataset. A real clade comparison can include internal branches as well.
+
+```{r clade-contrasts}
+focal_tips <- match(c("a", "b", "c", "d"), tree$tip.label)
+reference_tips <- match(c("e", "f", "g", "h"), tree$tip.label)
+focal <- which(tree$edge[, 2] %in% focal_tips)
+reference <- which(tree$edge[, 2] %in% reference_tips)
+comparison <- branch_rate_contrast(combined, focal, reference)
+comparison$summary
+comparison$fraction_focal_greater
+
+comparisons <- list(left_vs_right = list(focal = focal, reference = reference))
+with_contrasts <- branch_rate_pipeline(maps, groups,
+                                       normalize = "characters", contrasts = comparisons)
+with_contrasts$contrasts$combined$left_vs_right$summary
+```
+
+By default, rates within each branch set are weighted by branch duration.
+The resulting value is total mapped changes divided by total lineage time.
+`weighting = "equal"` instead treats branches equally. Differences and ratios
+are calculated within each replicate and then summarized. If a reference rate
+is zero, its ratio is undefined and this is reported explicitly; differences
+remain available. There is no automatic pseudocount.
+
+**`fraction_focal_greater` is not a p-value.** The intervals condition on the
+mapping model. They are not automatically calibrated confidence intervals for
+generating rate ratios, and selecting high-rate branches from the same result
+would make a subsequent contrast circular.
+
+## Plot the results
+
+```{r branch-plot, fig.cap="Combined-character branch rates in the example, expressed per character per tree time unit."}
+plot_branch_colored_tree(combined$tree, combined$branch_summary$mean,
+                         legend_title = "Rate per character", edge.width = 3,
+                         cex = 0.8)
+```
+
+```{r marginal-plot, fig.cap="Marginal rates over sampled lineages. Shading is the pointwise central 95% interval across map replicates, conditional on the fitted models and tree."}
+plot_marginal_rates(combined$marginal_summary,
+                     ylab = "Mapped changes per character per time unit")
+```
+
+## Rate-heterogeneity validation
+
+The reproducible benchmark is installed with the package in
+`validation/branch-rates`. It uses the previously specified 100-tip tree with
+a root age of 150 Ma. The focal 45-tip clade contains 76 whole branches whose
+parent age is at most 50 Ma; 70 other young branches serve as the reference.
+Branches crossing 50 Ma retain the baseline rate throughout.
+
+There are 30 independently simulated datasets in each of two conditions, with
+20 binary characters per dataset and equal root-state frequencies:
+
+* **Homogeneous control:** q = 0.002 per Myr on every branch.
+* **Accelerated clade:** q = 0.020 on focal young branches, and 0.002 elsewhere.
+
+For this downstream benchmark, each character is reconstructed under its own
+homogeneous ER model fitted with `phytools::fitMk()`, followed by 50 conditional
+maps from `phytools::make.simmap()`. The same mapping assumptions are used for
+both conditions. This independent fitting route isolates the downstream
+estimator; the executable example above separately tests the package's
+`fit_models()` and `paramo_stm()` interface.
+
+The simulator uses the exact symmetric-binary construction: Poisson event
+counts, uniformly distributed event times conditional on the count, and state
+flips inherited along the tree. Its event means and endpoint-state frequencies
+are checked against the analytic Mk distribution. True histories are retained
+to distinguish simulation/accounting correctness from inference using only tip
+observations. All characters, including invariant tip patterns, are retained in
+the benchmark. No histories are selected for favourable recovery. Unidentified
+high-rate fitting plateaus stop a run with saved diagnostics rather than
+triggering silent character removal.
+
+```{r validation-summary, echo=FALSE}
+summary_file <- system.file("validation", "branch-rates", "results",
+                            "scenario-summary.csv", package = "ontophylo")
+stopifnot(nzchar(summary_file))
+validation <- read.csv(summary_file)
+knitr::kable(validation, digits = 3,
+              col.names = c("Condition", "Datasets", "Median AUC", "Median ratio",
+                              "Interval excludes equal rates", "Interval covers true ratio"))
+```
+
+```{r validation-figure, echo=FALSE, out.width="100%", fig.cap="Validation on the fixed 100-tip tree. Each point represents one independently simulated character dataset. AUC describes discrimination between focal and reference young branches; it is not a branch-wise significance test."}
+figure <- system.file("validation", "branch-rates", "results",
+                      "rate-recovery.png", package = "ontophylo")
+stopifnot(nzchar(figure))
+knitr::include_graphics(figure)
+```
+
+The validation report separates branch-ranking discrimination, recovered fold
+change, coverage of the generating ratio, and the frequency with which the
+conditional mapping interval excludes equal rates under the homogeneous
+control. These are distinct properties. Good localization can coexist with
+substantial attenuation of the generating fold increase.
+
+In the homogeneous control, the conditional interval excluded equal rates in
+`r validation$Excludes_equal[1]` datasets. Under a true ten-fold acceleration,
+the median inferred ratio was `r round(validation$Median_ratio[2], 2)` and the
+median AUC was `r round(validation$Median_AUC[2], 3)`; the interval covered the
+generating ratio in `r validation$Covers_true_ratio[2]` datasets. Thus the
+method localized the strong accelerated regime in this design, but its
+conditional mapping intervals are unsuitable as nominal 5% tests of underlying
+rate heterogeneity or as calibrated intervals for the generating fold change.
+
+The fixed-tree benchmark does not establish robustness to incomplete taxon
+sampling, phylogenetic error or polytomies. Nor does it measure adaptation or
+provide a calibrated discovery test for unknown accelerated branches. The
+number of simulated datasets is too small to establish precise tail error
+rates; raw results and their counts are supplied for interpretation.
+
+To rerun the benchmark, copy its installed directory into a writable folder
+and run `Rscript --vanilla run-validation.R`. Optional arguments specify the
+output directory, datasets per condition and maps per character. Environment
+variables `ONTO_FIRST_DATASET` and `ONTO_LAST_DATASET` allow disjoint chunks;
+seeds are independent of worker scheduling and completed datasets are reused.
+
+## Input and uncertainty checks
+
+* All characters must share the tree, tip labels, edge order, branch lengths
+  and map sample size. Edge order is checked, not silently inferred.
+* Branch lengths and mapped segment durations must be positive. Segment
+  durations must sum to their corresponding branch length.
+* Map replicate identities are retained through amalgamation, normalization,
+  comparisons and marginalization. Independently sampled character histories
+  can be paired by position; dependent characters require joint draws.
+* Fixed-Q mapping intervals exclude uncertainty in fitted Q, model choice,
+  topology, dating and taxon sampling. A larger number of maps reduces Monte
+  Carlo error but does not remove those limitations.
+
+```{r session-info}
+sessionInfo()
+```

@@ -1,0 +1,232 @@
+* using log directory ‘/private/tmp/ontophylo-pipeline-build/ontophylo.Rcheck’
+* using R version 4.6.0 (2026-04-24)
+* using platform: aarch64-apple-darwin23
+* R was compiled by
+    Apple clang version 17.0.0 (clang-1700.3.19.1)
+    GNU Fortran (GCC) 14.2.0
+* running under: macOS 27.2.1
+* using session charset: UTF-8
+* current time: 2026-11-19 18:45:24 UTC
+* using options ‘--no-manual --no-build-vignettes’
+* checking for file ‘ontophylo/DESCRIPTION’ ... OK
+* this is package ‘ontophylo’ version ‘0.3.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘ontophylo’ can be installed ... OK
+* checking installed package size ... INFO
+  installed size is 45.9Mb
+  sub-directories of 1Mb or more:
+    data        44.0Mb
+    validation   1.1Mb
+* checking package directory ... OK
+* checking ‘build’ directory ... OK
+* checking DESCRIPTION meta-information ... NOTE
+License stub is invalid DCF.
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking code files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking dependencies in R code ... NOTE
+':::' call which should be '::': ‘phytools:::nodeHeights’
+  See the note in ?`:::` about the use of this operator.
+Unexported object imported by a ':::' call: ‘phytools:::getState’
+  See the note in ?`:::` about the use of this operator.
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+add_noise_MD: no visible global function definition for ‘runif’
+add_noise_MD: no visible binding for global variable ‘V1’
+add_noise_MD: no visible binding for global variable ‘V2’
+add_noise_MD: no visible binding for global variable ‘time’
+add_noise_MD: no visible binding for global variable ‘sp_extant’
+anat_plot: no visible global function definition for ‘layout’
+anat_plot: no visible binding for global variable ‘.’
+anat_plot: no visible global function definition for ‘grid.picture’
+color.bar: no visible global function definition for ‘axis’
+color.bar: no visible global function definition for ‘rect’
+discr_Simmap: no visible global function definition for ‘setNames’
+edge_profiles4plotting: no visible binding for global variable ‘X’
+edge_profiles4plotting: no visible binding for global variable ‘Y’
+edgeplot: no visible global function definition for ‘layout’
+edgeplot: no visible binding for global variable ‘X’
+edgeplot: no visible binding for global variable ‘Y’
+edgeplot: no visible binding for global variable ‘edge.id’
+edgeplot: no visible global function definition for ‘rainbow’
+estimate_band_W: no visible global function definition for ‘bw.nrd’
+estimate_band_W: no visible global function definition for ‘bw.nrd0’
+estimate_band_W: no visible global function definition for ‘bw.ucv’
+estimate_band_W: no visible global function definition for ‘bw.bcv’
+estimate_band_W: no visible global function definition for ‘bw.SJ’
+get_rough_state_cols: no visible global function definition for
+  ‘colorRampPalette’
+get_rough_state_cols: no visible global function definition for
+  ‘setNames’
+get_states_path: no visible binding for global variable ‘t.end’
+get_states_path: no visible binding for global variable ‘t.start’
+get_vector_ids_list: no visible global function definition for
+  ‘setNames’
+join_edges: no visible binding for global variable ‘edge.id’
+list2edges: no visible global function definition for ‘setNames’
+loess_smoothing_KDE: no visible global function definition for
+  ‘loess.control’
+loess_smoothing_KDE: no visible global function definition for
+  ‘predict’
+make_colors: no visible binding for global variable ‘.’
+make_colors: no visible global function definition for ‘setNames’
+make_colors_relative_scale: no visible binding for global variable ‘.’
+make_colors_relative_scale: no visible global function definition for
+  ‘setNames’
+make_contMap_KDE: no visible global function definition for ‘rainbow’
+make_data_NHPP_over_edge_MarkovKDE: no visible binding for global
+  variable ‘Focal.Edge.id’
+mds_plot: no visible binding for global variable ‘time’
+mds_plot: no visible binding for global variable ‘start.V1’
+mds_plot: no visible binding for global variable ‘start.V2’
+mds_plot: no visible binding for global variable ‘end.V1’
+mds_plot: no visible binding for global variable ‘end.V2’
+mds_plot: no visible binding for global variable ‘V1’
+mds_plot: no visible binding for global variable ‘V2’
+mds_plot: no visible binding for global variable ‘tip.id’
+MultiScale.simmap: no visible global function definition for ‘cmdscale’
+MultiScale.simmap: no visible global function definition for ‘var’
+MultiScale.simmap: no visible global function definition for ‘runif’
+MultiScale.simmap: no visible binding for global variable ‘V1’
+MultiScale.simmap: no visible binding for global variable ‘V2’
+MultiScale.simmap: no visible binding for global variable ‘time’
+MultiScale.simmap: no visible binding for global variable ‘sp_extant’
+path_hamming_over_trees_KDE: no visible binding for global variable
+  ‘tree.id’
+path_hamming_over_trees_KDE: no visible binding for global variable
+  ‘Focal.Edge.id’
+posterior_lambda_KDE: no visible global function definition for
+  ‘qgamma’
+posterior_lambda_KDE_Distr: no visible global function definition for
+  ‘rgamma’
+RAC_query: no visible global function definition for ‘setNames’
+stack_stm : <anonymous>: no visible global function definition for
+  ‘setNames’
+Undefined global functions or variables:
+  . axis bw.bcv bw.nrd bw.nrd0 bw.SJ bw.ucv cmdscale colorRampPalette
+  edge.id end.V1 end.V2 Focal.Edge.id grid.picture layout loess.control
+  predict qgamma rainbow rect rgamma runif setNames sp_extant start.V1
+  start.V2 t.end t.start time tip.id tree.id V1 V2 var X Y
+Consider adding
+  importFrom("graphics", "axis", "layout", "rect")
+  importFrom("grDevices", "colorRampPalette", "rainbow")
+  importFrom("stats", "bw.bcv", "bw.nrd", "bw.nrd0", "bw.SJ", "bw.ucv",
+             "cmdscale", "loess.control", "predict", "qgamma", "rgamma",
+             "runif", "setNames", "time", "var")
+to your NAMESPACE file.
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  ‘HAO’ ‘hym_annot’ ‘hym_graph’ ‘hym_hm’ ‘hym_img’ ‘hym_kde’
+  ‘hym_matrix’ ‘hym_nhpp’ ‘hym_stm’ ‘hym_stm_amalg’ ‘hym_stm_mds’
+  ‘hym_tree’
+Undocumented data sets:
+  ‘HAO’ ‘hym_annot’ ‘hym_graph’ ‘hym_hm’ ‘hym_img’ ‘hym_kde’
+  ‘hym_matrix’ ‘hym_nhpp’ ‘hym_stm’ ‘hym_stm_amalg’ ‘hym_stm_mds’
+  ‘hym_tree’
+All user-level objects in a package should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... WARNING
+Undocumented arguments in Rd file 'KDE_unnorm_trunc_Markov.Rd'
+  ‘x’ ‘h’ ‘dat’
+
+Undocumented arguments in Rd file 'KDE_unnormalized_scalar_Markov_kernel.Rd'
+  ‘x’ ‘h’ ‘dat’
+
+Undocumented arguments in Rd file 'color.bar.Rd'
+  ‘ticks’
+
+Undocumented arguments in Rd file 'get_path_edges.Rd'
+  ‘tree.merge’ ‘node’
+
+Undocumented arguments in Rd file 'get_states_path.Rd'
+  ‘tree.merge’ ‘node’
+
+Undocumented arguments in Rd file 'get_vector_ids_list.Rd'
+  ‘terms_list’
+Documented arguments not in \usage in Rd file 'get_vector_ids_list.Rd':
+  ‘term_list’
+
+Undocumented arguments in Rd file 'join_edges.Rd'
+  ‘tree.discr’ ‘edge.profs’
+
+Undocumented arguments in Rd file 'stack2.Rd'
+  ‘x’ ‘y’
+
+Undocumented arguments in Rd file 'stack_stm.Rd'
+  ‘stm.list’
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking contents of ‘data’ directory ... OK
+* checking LazyData ... WARNING
+  LazyData DB of 43.2 MB without LazyDataCompression set
+  See §1.1.6 of 'Writing R Extensions'
+* checking installed files from ‘inst/doc’ ... OK
+* checking files in ‘vignettes’ ... OK
+* checking examples ... ERROR
+Running examples in ‘ontophylo-Ex.R’ failed
+The error most likely occurred in:
+
+> ### Name: add_pseudodata
+> ### Title: Add pseudodata
+> ### Aliases: add_pseudodata
+> 
+> ### ** Examples
+> 
+> data("hym_hm", "hym_tree")
+> # Get hamming data from the head characters.
+> hm <- hym_hm$head
+> # Make NHPP path data.
+> nhpp <- make_data_NHPP_KDE_Markov_kernel(hm)
+> # Add pseudo data to path data.
+> psd <- lapply(nhpp, function(x) -x[x < 100] )
+> edge_groups <- as.list(1:length(hym_tree$edge.length))
+> nhpp_psd <- add_pseudodata(Edge.groups = edge_groups, Pseudo.data = psd, Path.data = nhpp)
+Error in add_pseudodata(Edge.groups = edge_groups, Pseudo.data = psd,  : 
+  could not find function "add_pseudodata"
+Execution halted
+* checking for unstated dependencies in ‘tests’ ... OK
+* checking tests ...
+  Running ‘testthat.R’
+ OK
+* checking for unstated dependencies in vignettes ... OK
+* checking package vignettes ... OK
+* checking running R code from vignettes ...
+  ‘branch-rate-pipeline.Rmd’ using ‘UTF-8’... OK
+ OK
+* checking re-building of vignette outputs ... SKIPPED
+* DONE
+
+Status: 1 ERROR, 3 WARNINGs, 3 NOTEs
+See
+  ‘/private/tmp/ontophylo-pipeline-build/ontophylo.Rcheck/00check.log’
+for details.
+

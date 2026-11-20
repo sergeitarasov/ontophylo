@@ -16,6 +16,12 @@ A list of numeric vectors, one per map replicate, in tree edge order.
 \description{
 Divide mapped change counts by branch duration separately for every map.
 }
+\examples{
+data("hym_stm")
+maps <- hym_stm[[1]][1:3]
+samples <- get_branch_rate_sample_smaps(maps)
+head(samples[[1]])
+}
 \seealso{
 \code{\link[=count_branch_changes]{count_branch_changes()}}, \code{\link[=ama_branches_multi_char]{ama_branches_multi_char()}}
 }

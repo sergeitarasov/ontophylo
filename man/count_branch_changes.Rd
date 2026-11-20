@@ -21,6 +21,10 @@ Use the original maps, before discretization or PARAMO stacking.
 Discretized maps can omit transitions; counting stacked-state transitions
 does not in general count all component-character changes.
 }
+\examples{
+data("hym_stm")
+head(count_branch_changes(hym_stm[[1]][[1]]))
+}
 \author{
 Sergei Tarasov
 }

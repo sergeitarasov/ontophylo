@@ -1,0 +1,6 @@
+Rate-heterogeneity recovery on the fixed 100-tip tree.
+Each coloured point is one independently simulated 20-character dataset.
+a: Discrimination between focal and reference young branches; the dashed line is chance AUC=0.5.
+b: Inferred focal/reference ratio; black diamonds mark the generating ratios (1 and 10).
+Inferred ratios compare duration-weighted mean mapped rates. The y axis in b is logarithmic.
+Strong discrimination does not imply accurate recovery of the generating fold increase.

@@ -39,6 +39,11 @@ ancestral branch. At the present, terminal branches contribute their
 limiting rates. The root stem, if supplied, is not included.
 This is a mean over sampled lineages, not the sum of their rates.
 }
+\examples{
+tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+branch_rate_thru_time(tree, c(1, 2, 3, 1),
+                       time_points = c(2, 1, 0), time_scale = "age")
+}
 \author{
 Sergei Tarasov
 }

@@ -13,9 +13,9 @@ branch_rates(
 )
 }
 \arguments{
-\item{list.of.chars}{A nonempty list of characters. Each character contains
-an equally sized list of original stochastic maps (or one \code{simmap}).
-Trees, edge order and branch lengths must agree across all maps.}
+\item{list.of.chars}{A named list of original character maps, or an
+\code{ontophylo_stm} result from \code{\link[=paramo_stm]{paramo_stm()}}. The latter reads one character's
+counts at a time and also supports runs storing only branch counts.}
 
 \item{n_points}{Number of equally spaced times when \code{time_points} is NULL.}
 

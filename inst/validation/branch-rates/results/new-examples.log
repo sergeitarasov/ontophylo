@@ -1,0 +1,17 @@
+Could not detect number of cores, defaulting to 1.
+PASS: fit_models 
+PASS: paramo_stm 
+PASS: count_branch_changes 
+PASS: get_branch_rate_sample_smaps 
+PASS: ama_branches_multi_char 
+PASS: summarize_branch_rates 
+PASS: summarize_branch_rates_multi 
+PASS: branch_rate_thru_time 
+PASS: branch_rate_thru_time_Multi 
+PASS: branch_rates 
+PASS: branch_rate_pipeline 
+PASS: branch_rate_contrast 
+PASS: plot_branch_colored_tree 
+PASS: plot_marginal_rates 
+null device 
+          1 

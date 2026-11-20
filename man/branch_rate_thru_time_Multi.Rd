@@ -41,6 +41,13 @@ A summary with age (\code{time}), number of contributing branches,
 \description{
 Marginalize each map replicate before calculating statistics across maps.
 }
+\examples{
+tree <- ape::read.tree(text = "((a:1,b:1):1,c:2);")
+samples <- list(c(1, 2, 3, 1), c(1, 3, 2, 1))
+curves <- branch_rate_thru_time_Multi(tree, samples, n_points = 5,
+                                      return_samples = TRUE)
+curves$summary
+}
 \seealso{
 \code{\link[=branch_rates]{branch_rates()}}
 }

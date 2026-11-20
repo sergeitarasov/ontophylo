@@ -1,0 +1,77 @@
+Validation of fit_models() and paramo_stm()
+Run date: 2026-11-19
+Environment: macOS arm64, R 4.6.0, corHMM 2.8, phytools 2.5.2.
+
+Statistical tests
+
+The complete testthat suite contains 19 test blocks: 12 for fitting/mapping
+and seven for the existing branch-rate functions. All 633 assertions passed
+with zero failures, test warnings or skips, including the installed-package run.
+
+- ER maximum likelihood estimates were compared with independent scalar
+  optimization of a likelihood calculated by exhaustive internal-state
+  enumeration. Rate agreement tolerance: 1e-4; log-likelihood: 1e-7.
+- ARD log likelihoods and marginal node probabilities were checked by exact
+  enumeration for equal, stationary, FitzJohn and numeric root settings,
+  including ambiguous and missing observations. Tolerances: 1e-6 and 1e-5.
+- A three-state custom model was checked against exact enumeration; its
+  shared rates and forbidden transitions were preserved.
+- Root-state frequencies from 1,200 maps per root treatment were compared
+  with exact conditional probabilities, using a six-standard-error bound
+  plus 0.005 numerical allowance.
+- In 2,000 symmetric binary bridge maps with known root state and q=0.7,
+  change counts had the required parity. Their means agreed with the exact
+  expectations q*tanh(q) and q/tanh(q), within six Monte Carlo standard errors.
+- Tests checked taxon order, model selection, duplicate models, failure
+  reporting, undefined AICc, reproducible parallel processing, caller RNG
+  preservation, chunking, checkpoint extension and interrupted-run recovery.
+- Original-map and stored-count inputs produced the same combined branch
+  and marginal rate outputs. Forbidden transitions were absent from maps.
+
+100-tip pilot
+
+The reproducible script asr-smoke.R generates one 100-tip birth tree with
+root age 10 and 20 independent binary characters. Both directional rates
+are 0.1; root states have equal probability. Simulation uses independent
+Poisson jump counts, not either inference engine.
+
+Each character was fitted with ER and ARD using AICc, three random starts,
+equal root probabilities and two workers. Mapping used 100 histories per
+character, batches of 25, and stored branch counts on disk.
+
+20/20 fits and 2,000/2,000 maps completed; no selected fit reached a bound.
+ER selected: 18 characters; ARD selected: 2 characters.
+Median selected q01: 0.1063989.
+Median selected q10: 0.1079134.
+Fitting elapsed time: 18.178 s; mapping elapsed time: 34.265 s.
+Realized simulated changes over all characters/branches: 606.
+Conditional mean reconstructed changes over all characters/branches: 666.8.
+
+The per-character results are in parameter-estimates.csv and timing.csv.
+This is a smoke test on one tree, not a general calibration study. Individual
+estimated rates vary, and model selection did not always choose the generating
+model. Conditional mapping intervals do not include Q, model or tree uncertainty.
+More extensive simulation would be needed to establish repeated-sampling
+coverage or performance under large state spaces and different sampling regimes.
+
+Reproduce after installing the development package:
+  Rscript inst/validation/asr-smoke.R /path/to/new-output-directory
+
+Package check details are recorded in the accompanying package-check.log.
+
+R CMD check (source package, --no-manual --no-build-vignettes)
+
+Installation, loading, code syntax, new documentation and all tests passed.
+Both new exported-function examples also passed when run separately from the
+installed package. The full check ended with 1 ERROR, 4 WARNINGs and 3 NOTEs:
+
+- ERROR: an unchanged legacy add_pseudodata example calls this unexported
+  function without namespace qualification. The original devel source and
+  NAMESPACE have the same problem; this is unrelated to the new ASR functions.
+- WARNINGs: existing undocumented datasets, incomplete legacy argument
+  documentation, missing LazyDataCompression, and existing data compression.
+- NOTEs: existing LICENSE formatting, private phytools calls in legacy code,
+  and undeclared globals/imports in legacy functions.
+
+The package is therefore not fully R CMD check clean. Those unrelated files
+were not changed as part of the inference implementation.
