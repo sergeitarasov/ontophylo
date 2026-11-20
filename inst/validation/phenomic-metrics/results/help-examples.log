@@ -1,0 +1,153 @@
+Could not detect number of cores, defaulting to 1.
+
+gt_nr_> rates <- cbind(head = c(0, 1, 2, 10), thorax = c(0, 1, 10, 2))
+
+gt_nr_> get_enrichment_mask(rates, lower_q = 0.25, upper_q = 0.75,
+gt_nr_+                     direction = "over")
+     head thorax
+[1,]    0      0
+[2,]    0      0
+[3,]    0      1
+[4,]    1      0
+
+gt_nr_> get_enrichment_mask(rates, direction = "under", return_type = "masked")
+     head thorax
+[1,]    0      0
+[2,]    0      0
+[3,]    0      0
+[4,]    0      0
+PASSED EXAMPLE: get_enrichment_mask 
+
+clss__> data("hym_stm")
+
+clss__> maps <- hym_stm[1:2]
+
+clss__> groups <- list(region_A = names(maps)[1], region_B = names(maps)[2])
+
+clss__> rates <- branch_rate_pipeline(maps, groups, marginal = FALSE)
+
+clss__> regimes <- classify_branch_rates(rates)
+
+clss__> head(regimes$thresholds)
+  map    group lower       upper constant n_accelerated n_decelerated n_both
+1   1 region_A     0 0.007662500    FALSE             9           160      0
+2   1 region_B     0 0.009600862    FALSE             9           154      0
+3   2 region_A     0 0.007349805    FALSE             9           161      0
+4   2 region_B     0 0.012142532    FALSE             9           154      0
+5   3 region_A     0 0.008838826    FALSE             9           157      0
+6   3 region_B     0 0.011654223    FALSE             9           149      0
+
+clss__> head(regimes$branch_summary)
+     group edge parent child accelerated_frequency decelerated_frequency
+1 region_A    1     88    89                     0                     1
+2 region_A    2     89    90                     0                     1
+3 region_A    3     90    91                     0                     1
+4 region_A    4     91    92                     0                     1
+5 region_A    5     92    93                     0                     1
+6 region_A    6     93    94                     0                     1
+  both_frequency
+1              0
+2              0
+3              0
+4              0
+5              0
+6              0
+PASSED EXAMPLE: classify_branch_rates 
+
+phnmc_> patterns <- rbind(c(1, 0), c(0, 1), c(0, 0), c(0, 0))
+
+phnmc_> phenomic_diversity(patterns) # fraction = 1/2, exp(H) = 2, Neff = 1
+  Neff fraction   entropy effective_patterns n_lineages n_enriched n_patterns
+1    1      0.5 0.6931472                  2          4          2          2
+PASSED EXAMPLE: phenomic_diversity 
+
+phnmc_> patterns <- rbind(c(1, 1), c(0, 0))
+
+phnmc_> phenomic_coordination(patterns) # branch proportions 1 and 0; Pc = 1/2
+$Pc
+[1] 0.5
+
+$branch
+[1] 1 0
+
+$n_lineages
+[1] 2
+
+$n_regions
+[1] 2
+
+PASSED EXAMPLE: phenomic_coordination 
+
+phnmc_> data("hym_stm")
+
+phnmc_> maps <- hym_stm[1:2]
+
+phnmc_> groups <- list(region_A = names(maps)[1], region_B = names(maps)[2])
+
+phnmc_> rates <- branch_rate_pipeline(maps, groups, marginal = FALSE)
+
+phnmc_> metrics <- phenomic_metrics(rates, n_points = 10)
+
+phnmc_> head(metrics$summary)
+     metric     time n_branches      mean     median         sd      lower
+1 Neff_plus 280.8679          2 0.0000000 0.00000000 0.00000000 0.00000000
+2 Neff_plus 249.6603          8 0.0225000 0.00000000 0.04826536 0.00000000
+3 Neff_plus 218.4528         12 0.1236478 0.08333333 0.14303548 0.00000000
+4 Neff_plus 187.2452         18 0.2850342 0.31498026 0.14220958 0.05555556
+5 Neff_plus 156.0377         27 0.2402907 0.20998684 0.10673744 0.07407407
+6 Neff_plus 124.8302         38 0.1643150 0.18471214 0.08460809 0.05263158
+      upper
+1 0.0000000
+2 0.1250000
+3 0.5849218
+4 0.6285394
+5 0.4789647
+6 0.3331918
+
+phnmc_> plot_marginal_rates(metrics$summary[metrics$summary$metric == "Pc", ],
+phnmc_+                     ylab = "Phenomic coordination (Pc)")
+PASSED EXAMPLE: phenomic_metrics 
+
+brnc__> data("hym_stm")
+
+brnc__> maps <- hym_stm[1:2]
+
+brnc__> groups <- list(combined = names(maps), first = names(maps)[1])
+
+brnc__> result <- branch_rate_pipeline(maps, groups, normalize = "characters",
+brnc__+                                 n_points = 10)
+
+brnc__> head(result$branch_summary)
+     group edge parent child branch_length         mean median          sd
+1 combined    1     88    89      3.135332 0.0000000000      0 0.000000000
+2 combined    2     89    90      2.852556 0.0000000000      0 0.000000000
+3 combined    3     90    91      3.119663 0.0032054744      0 0.022551361
+4 combined    4     91    92      8.288994 0.0006032095      0 0.006032095
+5 combined    5     92    93      2.867711 0.0000000000      0 0.000000000
+6 combined    6     93    94      3.807194 0.0000000000      0 0.000000000
+  lower upper
+1     0     0
+2     0     0
+3     0     0
+4     0     0
+5     0     0
+6     0     0
+
+brnc__> head(result$marginal_summary)
+     group     time n_branches         mean       median           sd
+1 combined 280.8679          2 0.0003382373 0.0000000000 0.0006297758
+2 combined 249.6603          8 0.0009477417 0.0004559936 0.0012703752
+3 combined 218.4528         12 0.0024353405 0.0009272164 0.0025868943
+4 combined 187.2452         18 0.0016862178 0.0015417910 0.0007953557
+5 combined 156.0377         27 0.0014703528 0.0014480890 0.0005083898
+6 combined 124.8302         38 0.0017206011 0.0017186650 0.0004434576
+         lower       upper
+1 0.0000000000 0.001780197
+2 0.0000000000 0.005050546
+3 0.0003053899 0.009371267
+4 0.0004610022 0.003296020
+5 0.0005351174 0.002517283
+6 0.0009952003 0.002664481
+PASSED EXAMPLE: branch_rate_pipeline 
+null device 
+          1 

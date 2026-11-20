@@ -3,12 +3,11 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
                       fig.height = 4.5, dpi = 140)
 library(ontophylo)
 
-## ----workflow, echo=FALSE, fig.width=8.2, fig.height=8, fig.cap="The full pipeline. Branch and marginal summaries retain map replicates until the final statistical summary. Anatomical groups are processed separately."----
+## ----workflow, echo=FALSE, fig.width=8.2, fig.height=9, fig.cap="The integrated pipeline. Rate regimes, Neff and Pc are calculated separately for every map replicate before summarizing uncertainty."----
 grid::grid.newpage()
 box <- function(x, y, width, height, label, fill = "#E1F1FC") {
-  grid::grid.roundrect(x, y, width, height, r = grid::unit(0.035, "snpc"),
+  grid::grid.roundrect(x, y, width, height, r = grid::unit(0.025, "snpc"),
                        gp = grid::gpar(fill = fill, col = "#555555"))
-  # Generic sans works with both HTML rendering and R's default PDF device.
   grid::grid.text(label, x, y, gp = grid::gpar(fontsize = 10, fontfamily = "sans"))
 }
 arrow <- function(x0, y0, x1, y1) {
@@ -16,29 +15,30 @@ arrow <- function(x0, y0, x1, y1) {
                    arrow = grid::arrow(length = grid::unit(2, "mm")),
                    gp = grid::gpar(col = "#555555"))
 }
-box(0.5, 0.94, 0.64, 0.065, "Dated tree + observations for each character", "#F3F3F3")
-box(0.5, 0.83, 0.76, 0.075, "fit_models()\nCompare Q models independently for each character")
-box(0.5, 0.71, 0.76, 0.075, "paramo_stm()\nSample histories using the fitted Q and root setting")
-box(0.5, 0.59, 0.76, 0.075, "read_stm()\nRead a named list of original character-map samples")
-box(0.5, 0.45, 0.90, 0.105,
+box(0.5, 0.955, 0.76, 0.06, "Dated tree + observations for each character", "#F3F3F3")
+box(0.5, 0.855, 0.84, 0.075, "fit_models()\nCompare Q models independently for each character")
+box(0.5, 0.735, 0.84, 0.085,
+     "paramo_stm() / read_stm()\nSample conditional histories; retain maps or branch counts")
+box(0.5, 0.600, 0.92, 0.10,
      "branch_rate_pipeline()\nCharacter groups + optional per-character normalization\nama_branches_multi_char(): combined branch-rate samples", "#FFF2D5")
-box(0.165, 0.265, 0.30, 0.13,
-     "Branch summaries\nsummarize_branch_rates_multi()\nMean, median, SD, quantiles")
-box(0.5, 0.265, 0.30, 0.13,
-     "Marginal rates\nbranch_rate_thru_time_Multi()\nReplicate curves + summaries")
-box(0.835, 0.265, 0.30, 0.13,
+box(0.165, 0.435, 0.30, 0.14,
+     "Branch samples + summaries\nsummarize_branch_rates_multi()\nplot_branch_colored_tree()")
+box(0.5, 0.435, 0.30, 0.14,
+     "Marginal rates\nbranch_rate_thru_time_Multi()\nplot_marginal_rates()")
+box(0.835, 0.435, 0.30, 0.14,
      "Predefined clade comparisons\nbranch_rate_contrast()\nReplicate differences + ratios")
-box(0.165, 0.08, 0.30, 0.09, "plot_branch_colored_tree()\nBranch-rate tree", "#F3F3F3")
-box(0.5, 0.08, 0.30, 0.09, "plot_marginal_rates()\nCurve + mapping interval", "#F3F3F3")
-arrow(0.5, 0.906, 0.5, 0.87)
-arrow(0.5, 0.791, 0.5, 0.75)
-arrow(0.5, 0.671, 0.5, 0.63)
-arrow(0.5, 0.551, 0.5, 0.506)
-arrow(0.30, 0.396, 0.165, 0.333)
-arrow(0.50, 0.396, 0.50, 0.333)
-arrow(0.70, 0.396, 0.835, 0.333)
-arrow(0.165, 0.198, 0.165, 0.128)
-arrow(0.50, 0.198, 0.50, 0.128)
+box(0.5, 0.265, 0.90, 0.10,
+     "classify_branch_rates()\nget_enrichment_mask(): quantile regimes per region and map", "#E5F3E7")
+box(0.5, 0.100, 0.94, 0.115,
+     "phenomic_metrics()\nphenomic_diversity(): Neff+ and Neff-; phenomic_coordination(): Pc\nTime curves, branch coordination and conditional map intervals", "#E5F3E7")
+arrow(0.5, 0.924, 0.5, 0.894)
+arrow(0.5, 0.816, 0.5, 0.779)
+arrow(0.5, 0.691, 0.5, 0.651)
+arrow(0.30, 0.549, 0.165, 0.506)
+arrow(0.50, 0.549, 0.50, 0.506)
+arrow(0.70, 0.549, 0.835, 0.506)
+arrow(0.165, 0.364, 0.3, 0.317)
+arrow(0.50, 0.214, 0.50, 0.159)
 
 ## ----fit-models---------------------------------------------------------------
 tree <- ape::read.tree(text =
@@ -80,6 +80,45 @@ direct <- branch_rate_pipeline(mapped, groups, normalize = "characters",
                                 time_points = seq(3, 0, by = -0.1),
                                 time_scale = "age")
 stopifnot(isTRUE(all.equal(direct$branch_summary, result$branch_summary)))
+
+## ----phenomic-wrapper---------------------------------------------------------
+anatomy <- list(region_A = "char1", region_B = "char2", region_C = "char3")
+phenome <- branch_rate_pipeline(mapped, groups = anatomy,
+                                 normalize = "characters", n_points = 25,
+                                 phenomic = list(lower_q = 0.05, upper_q = 0.95))
+head(phenome$phenomic$summary)
+head(phenome$phenomic$regimes$branch_summary)
+head(phenome$phenomic$regimes$thresholds)
+
+## ----separate-phenomic-functions----------------------------------------------
+regimes <- classify_branch_rates(phenome, lower_q = 0.05, upper_q = 0.95)
+dim(regimes$accelerated) # branches x regions x maps
+dim(regimes$decelerated)
+metrics <- phenomic_metrics(phenome, n_points = 25)
+stopifnot(isTRUE(all.equal(metrics, phenome$phenomic)))
+
+# Inspect the rate classification for one map replicate.
+one_map <- matrix(0, nrow(tree$edge), length(anatomy),
+                    dimnames = list(NULL, names(anatomy)))
+for (region in names(anatomy)) {
+  one_map[, region] <- phenome$groups[[region]]$rate_samples[, 1]
+}
+accelerated <- get_enrichment_mask(one_map, 0.05, 0.95, direction = "over")
+decelerated <- get_enrichment_mask(one_map, 0.05, 0.95, direction = "under")
+accelerated_rates <- get_enrichment_mask(one_map, 0.05, 0.95,
+                                         direction = "over", return_type = "masked")
+
+## ----exact-phenomic-examples--------------------------------------------------
+joint <- rbind(c(1, 1), c(0, 0), c(0, 0), c(0, 0))
+separate <- rbind(c(1, 0), c(0, 1), c(0, 0), c(0, 0))
+phenomic_coordination(joint)       # Pc = 0.25
+phenomic_coordination(separate)    # Pc = 0.25
+phenomic_diversity(joint)          # Neff = 0.25
+phenomic_diversity(separate)       # Neff = 1
+
+## ----phenomic-plot, fig.cap="Pc calculated per map and then summarized. The band contains pointwise conditional map quantiles."----
+pc <- metrics$summary[metrics$summary$metric == "Pc", ]
+plot_marginal_rates(pc, ylab = "Phenomic coordination (Pc)")
 
 ## ----count-and-amalgamate-----------------------------------------------------
 counts <- count_branch_changes(maps$char1[[1]])
@@ -149,6 +188,20 @@ knitr::kable(validation, digits = 3,
 figure <- system.file("validation", "branch-rates", "results",
                       "rate-recovery.png", package = "ontophylo")
 stopifnot(nzchar(figure))
+knitr::include_graphics(figure)
+
+## ----phenomic-validation-summary, echo=FALSE----------------------------------
+pilot_file <- system.file("validation", "phenomic-metrics", "results",
+                           "pilot-summary.csv", package = "ontophylo")
+pilot <- read.csv(pilot_file)
+knitr::kable(pilot[, c("scenario", "mean_classified_fraction", "regime_auc",
+                       "classified_precision", "Pc_present")], digits = 3,
+              col.names = c("Scenario", "Classified fraction", "Regime AUC",
+                              "Precision", "Present Pc"))
+
+## ----phenomic-validation-figure, echo=FALSE, out.width="100%", fig.cap="Four fixed simulation pilots. Dotted black curves classify generating rates, dashed orange curves classify the actual histories, and blue curves/bands summarize reconstructed histories (95% conditional map quantiles). All use the same inclusive quantile rule; constant columns are unclassified. These are distinct targets, and the reconstruction does not recover the generating Neff/Pc magnitudes."----
+figure <- system.file("validation", "phenomic-metrics", "results",
+                      "phenomic-pilot.png", package = "ontophylo")
 knitr::include_graphics(figure)
 
 ## ----session-info-------------------------------------------------------------

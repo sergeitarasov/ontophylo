@@ -1,0 +1,38 @@
+"file","test","nb","failed","skipped","error","warning","passed"
+"test-branch-rates.R","original character counts are summed within each replicate",15,0,FALSE,FALSE,0,15
+"test-branch-rates.R","state changes exclude repeated labels and retain reversals",2,0,FALSE,FALSE,0,2
+"test-branch-rates.R","one-character and one-map cases retain their dimensions",6,0,FALSE,FALSE,0,6
+"test-branch-rates.R","custom time grids use correct ages and nodes count descendants once",9,0,FALSE,FALSE,0,9
+"test-branch-rates.R","marginal uncertainty is computed after averaging each replicate",5,0,FALSE,FALSE,0,5
+"test-branch-rates.R","incompatible trees, samples and malformed histories fail clearly",14,0,FALSE,FALSE,0,14
+"test-branch-rates.R","phytools map samples run through the complete workflow",6,0,FALSE,FALSE,0,6
+"test-fit-models.R","ER likelihood and MLE agree with independent exact enumeration",8,0,FALSE,FALSE,0,8
+"test-fit-models.R","ARD root treatments and ambiguous states agree with exact likelihoods",16,0,FALSE,FALSE,0,16
+"test-fit-models.R","named custom models preserve forbidden transitions and rate constraints",6,0,FALSE,FALSE,0,6
+"test-fit-models.R","data order, character overrides and root names are respected",7,0,FALSE,FALSE,0,7
+"test-fit-models.R","failures, constant characters and undefined AICc remain visible",9,0,FALSE,FALSE,0,9
+"test-fit-models.R","fit checkpoints, parallelism and RNG are reproducible",5,0,FALSE,FALSE,0,5
+"test-fit-models.R","a failed candidate cannot silently make a complete comparison",4,0,FALSE,FALSE,0,4
+"test-paramo-stm.R","mapping preserves observations, branches and conditional rate samples",386,0,FALSE,FALSE,0,386
+"test-paramo-stm.R","conditional root frequencies agree with exact ancestral probabilities",4,0,FALSE,FALSE,0,4
+"test-paramo-stm.R","mapped change counts obey the analytical binary bridge distribution",5,0,FALSE,FALSE,0,5
+"test-paramo-stm.R","batch sizes, parallel workers and resumption retain identical histories",10,0,FALSE,FALSE,0,10
+"test-paramo-stm.R","forbidden transitions remain absent from sampled histories",116,0,FALSE,FALSE,0,116
+"test-phenomic-metrics.R","classification uses separate region quantiles and explicit ties",7,0,FALSE,FALSE,0,7
+"test-phenomic-metrics.R","constant and zero rates cannot silently imply acceleration",7,0,FALSE,FALSE,0,7
+"test-phenomic-metrics.R","regime input failures are explicit",8,0,FALSE,FALSE,0,8
+"test-phenomic-metrics.R","Neff is whole-pattern diversity rather than region diversity",22,0,FALSE,FALSE,0,22
+"test-phenomic-metrics.R","regime arrays preserve map pairing and region order",10,0,FALSE,FALSE,0,10
+"test-phenomic-metrics.R","nonlinear metrics are calculated before averaging maps",14,0,FALSE,FALSE,0,14
+"test-phenomic-metrics.R","constant regions stay in the denominator and overlap is reported",7,0,FALSE,FALSE,0,7
+"test-phenomic-metrics.R","mismatched inputs and times cannot produce phenomic summaries",10,0,FALSE,FALSE,0,10
+"test-phenomic-metrics.R","the full map pipeline includes phenomic metrics only when requested",8,0,FALSE,FALSE,0,8
+"test-phenomic-metrics.R","fitted maps and disk counts give identical phenomic results",3,0,FALSE,FALSE,0,3
+"test-rate-pipeline.R","group wrappers preserve memberships, sample pairing and scaling",12,0,FALSE,FALSE,0,12
+"test-rate-pipeline.R","invalid group definitions fail rather than silently dropping inputs",8,0,FALSE,FALSE,0,8
+"test-rate-pipeline.R","clade comparisons preserve exposure weighting and joint map draws",12,0,FALSE,FALSE,0,12
+"test-rate-pipeline.R","zero reference rates remain explicit and differences remain available",5,0,FALSE,FALSE,0,5
+"test-rate-pipeline.R","pipeline contrasts match the separate interface",2,0,FALSE,FALSE,0,2
+"test-rate-pipeline.R","plots retain rates and handle constant colours",5,0,FALSE,FALSE,0,5
+"test-rate-pipeline.R","upstream fits and maps feed the pipeline in memory and from disk",8,0,FALSE,FALSE,0,8
+"test-rate-pipeline.R","simulated flips have the binary Mk distribution and inherit states",13,0,FALSE,FALSE,0,13

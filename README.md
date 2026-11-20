@@ -207,3 +207,37 @@ conditional mapping summaries are not calibrated significance tests.
 The reproducible homogeneous-control and accelerated-clade benchmark is in
 [inst/validation/branch-rates](inst/validation/branch-rates). Its report separates
 branch-ranking discrimination, fold-change recovery and interval behaviour.
+
+## Acceleration, deceleration and phenomic metrics
+
+The branch-rate pipeline can also return Neff+, Neff- and phenomic coordination
+(Pc, formerly enrichment strength Se). Choose elementary regions, excluding an
+aggregate of those same regions. Using the `mapped` object above:
+
+```r
+regions <- list(wing = "wing", leg = "leg")
+result <- branch_rate_pipeline(mapped, groups = regions,
+                                phenomic = list(lower_q = 0.05, upper_q = 0.95))
+result$phenomic$summary
+result$phenomic$regimes$branch_summary
+result$phenomic$regimes$thresholds
+
+# Or add metrics to an existing rate-pipeline result.
+metrics <- phenomic_metrics(result)
+pc <- metrics$summary[metrics$summary$metric == "Pc", ]
+plot_marginal_rates(pc, ylab = "Phenomic coordination (Pc)")
+```
+
+`classify_branch_rates()` applies `get_enrichment_mask()` separately within each
+region and map. `phenomic_diversity()` computes Neff from the diversity of whole
+binary anatomical patterns; `phenomic_coordination()` averages the fraction of
+accelerated regions over lineages. The higher-order wrapper computes all metrics
+per replicate before summarizing. Both original maps and saved branch counts work.
+
+Cutoffs describe relative tails, not statistical evidence for a changed Q.
+Inclusive ties preserve the directional manuscript scripts, but can select many
+zero-rate branches as decelerated. Constant regions are unclassified by default;
+`constant = "include"` reproduces the old behaviour. `ties = "exclude"` uses
+strict above/below comparisons. Cutoffs and actual selected counts are retained.
+The [full vignette](inst/doc/branch-rate-pipeline.html) includes the updated
+diagram, formulas and runnable examples for every function.

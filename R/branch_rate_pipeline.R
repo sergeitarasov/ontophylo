@@ -15,6 +15,12 @@
 #' @param contrasts Optional named list of predefined branch comparisons. Each
 #'   element is a list with `focal` and `reference` edge indices, passed to
 #'   [branch_rate_contrast()]. Comparisons use branch-duration weighting.
+#' @param phenomic NULL (default) skips phenomic metrics. Otherwise supply a
+#'   named list of options for [phenomic_metrics()], such as
+#'   `list(groups = c("region_A", "region_B"), upper_q = 0.95)`. An empty list
+#'   uses all groups. Options are `groups`, `lower_q`, `upper_q`, `ties`, and
+#'   `constant`. The pipeline time grid is reused. Select elementary regions,
+#'   excluding a whole-phenome aggregate, to avoid counting it as another region.
 #' @inheritParams branch_rates
 #' @return A list with `groups` (one [branch_rates()] result per character group),
 #'   combined `branch_summary` and `marginal_summary` tables, a `group_summary`
@@ -22,6 +28,7 @@
 #'   samples and summaries. Every combined summary row includes a `group` ID.
 #'   Raw rate samples remain available in `groups[[name]]$rate_samples`.
 #'   `input_status` retains the original status table for mapping-result input.
+#'   When requested, `phenomic` contains Neff+, Neff-, Pc and regime results.
 #' @details Group memberships are checked before analysis. All supplied maps
 #'   must describe the same tree in the same edge order, with equally many
 #'   replicates. Failed/skipped mapping results require explicit exclusion via
@@ -43,9 +50,18 @@ branch_rate_pipeline <- function(smaps, groups = NULL,
                                   normalize = c("none", "characters"),
                                   contrasts = NULL, n_points = 100,
                                   time_points = NULL,
-                                  time_scale = c("root", "age"), marginal = TRUE) {
+                                  time_scale = c("root", "age"), marginal = TRUE,
+                                  phenomic = NULL) {
   normalize <- match.arg(normalize)
   time_scale <- match.arg(time_scale)
+  if (!is.null(phenomic)) {
+    allowed <- c("groups", "lower_q", "upper_q", "ties", "constant")
+    if (!is.list(phenomic) || (length(phenomic) > 0L &&
+        (is.null(names(phenomic)) || anyNA(names(phenomic)) ||
+         anyDuplicated(names(phenomic)) || any(!names(phenomic) %in% allowed)))) {
+      stop("phenomic must be a named options list for phenomic_metrics().", call. = FALSE)
+    }
+  }
   mapping_result <- inherits(smaps, "ontophylo_stm")
   input_status <- NULL
   if (mapping_result) {
@@ -146,11 +162,17 @@ branch_rate_pipeline <- function(smaps, groups = NULL,
   }
   marginal_summary <- NULL
   if (marginal) marginal_summary <- do.call(rbind, marginal_tables)
-  list(groups = results, group_summary = group_summary, memberships = groups,
+  out <- list(groups = results, group_summary = group_summary, memberships = groups,
        branch_summary = do.call(rbind, branch_tables),
        marginal_summary = marginal_summary,
        contrasts = if (is.null(contrasts)) NULL else comparison_results,
        input_status = input_status)
+  if (!is.null(phenomic)) {
+    arguments <- c(list(result = out, n_points = n_points,
+                         time_points = time_points, time_scale = time_scale), phenomic)
+    out$phenomic <- do.call(phenomic_metrics, arguments)
+  }
+  out
 }
 
 #' Compare mapped rates between two predefined branch sets

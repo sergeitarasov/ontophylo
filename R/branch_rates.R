@@ -176,47 +176,14 @@ summarize_branch_rates_multi <- function(list.of.chars,
 branch_rate_thru_time <- function(tree, branch_rate, n_points = 100,
                                   time_points = NULL,
                                   time_scale = c("root", "age")) {
-  time_scale <- match.arg(time_scale)
-  .check_branch_tree(tree)
-  if (!ape::is.rooted(tree) || !ape::is.ultrametric(tree)) {
-    stop("Marginal rates require a rooted ultrametric tree.", call. = FALSE)
-  }
+  slices <- .branch_time_slices(tree, n_points, time_points, time_scale)
   .check_branch_vector(branch_rate, nrow(tree$edge))
-  heights <- phytools::nodeHeights(tree)
-  tree_height <- max(heights)
-
-  if (is.null(time_points)) {
-    if (!is.numeric(n_points) || length(n_points) != 1L ||
-        !is.finite(n_points) || n_points < 2 || n_points != as.integer(n_points)) {
-      stop("n_points must be an integer of at least two.", call. = FALSE)
-    }
-    times <- seq(0, tree_height, length.out = n_points)
-  } else {
-    if (!is.numeric(time_points) || length(time_points) == 0L ||
-        any(!is.finite(time_points)) ||
-        any(time_points < 0 | time_points > tree_height)) {
-      stop("time_points must lie between zero and the tree height.", call. = FALSE)
-    }
-    times <- time_points
-    if (time_scale == "age") {
-      times <- tree_height - time_points
-    }
+  rate_vals <- numeric(length(slices$edges))
+  for (i in seq_along(slices$edges)) {
+    rate_vals[i] <- mean(branch_rate[slices$edges[[i]]])
   }
-
-  rate_vals <- numeric(length(times))
-  n_branches <- integer(length(times))
-  for (i in seq_along(times)) {
-    t <- times[i]
-    edge_ids <- which(t >= heights[, 1] & t < heights[, 2])
-    if (t == tree_height) {
-      # All tips represent the present, allowing numerical ultrametric error.
-      edge_ids <- which(tree$edge[, 2] <= length(tree$tip.label))
-    }
-    n_branches[i] <- length(edge_ids)
-    rate_vals[i] <- mean(branch_rate[edge_ids])
-  }
-  data.frame(time = tree_height - times, rate = rate_vals,
-             n_branches = n_branches)
+  data.frame(time = slices$time, rate = rate_vals,
+             n_branches = lengths(slices$edges))
 }
 
 #' Summarize marginal rates across map replicates
@@ -508,4 +475,46 @@ branch_rates <- function(list.of.chars, n_points = 100, time_points = NULL,
              median = .branch_statistic(mat, "median", NULL),
              sd = .branch_statistic(mat, "sd", NULL),
              lower = bounds[1, ], upper = bounds[2, ])
+}
+
+# Shared node-boundary convention for marginal rates and phenomic metrics.
+.branch_time_slices <- function(tree, n_points, time_points,
+                                 time_scale = c("root", "age")) {
+  time_scale <- match.arg(time_scale)
+  .check_branch_tree(tree)
+  if (!ape::is.rooted(tree) || !ape::is.ultrametric(tree)) {
+    stop("Marginal rates require a rooted ultrametric tree.", call. = FALSE)
+  }
+  heights <- phytools::nodeHeights(tree)
+  tree_height <- max(heights)
+
+  if (is.null(time_points)) {
+    if (!is.numeric(n_points) || length(n_points) != 1L ||
+        !is.finite(n_points) || n_points < 2 || n_points != as.integer(n_points)) {
+      stop("n_points must be an integer of at least two.", call. = FALSE)
+    }
+    times <- seq(0, tree_height, length.out = n_points)
+  } else {
+    if (!is.numeric(time_points) || length(time_points) == 0L ||
+        any(!is.finite(time_points)) ||
+        any(time_points < 0 | time_points > tree_height)) {
+      stop("time_points must lie between zero and the tree height.", call. = FALSE)
+    }
+    times <- time_points
+    if (time_scale == "age") {
+      times <- tree_height - time_points
+    }
+  }
+
+  edge_sets <- vector("list", length(times))
+  for (i in seq_along(times)) {
+    t <- times[i]
+    edge_ids <- which(t >= heights[, 1] & t < heights[, 2])
+    if (t == tree_height) {
+      # All tips represent the present, allowing numerical ultrametric error.
+      edge_ids <- which(tree$edge[, 2] <= length(tree$tip.label))
+    }
+    edge_sets[[i]] <- edge_ids
+  }
+  list(time = tree_height - times, edges = edge_sets)
 }

@@ -1,0 +1,1 @@
+100 fixed-seed cases passed: both directional masks, Neff and scaled Se/Pc match the original formulas.

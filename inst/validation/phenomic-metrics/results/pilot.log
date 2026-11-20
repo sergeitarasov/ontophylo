@@ -1,0 +1,17 @@
+Could not detect number of cores, defaulting to 1.
+     scenario generating_regime_fraction mean_classified_fraction regime_auc
+1 homogeneous                          0               0.05050505         NA
+  classified_precision Pc_present elapsed_seconds
+1                   NA     0.0506        18.19137
+     scenario generating_regime_fraction mean_classified_fraction regime_auc
+1 coordinated                  0.3838384               0.05111111  0.6950361
+  classified_precision Pc_present elapsed_seconds
+1            0.9209486     0.0702        17.86525
+  scenario generating_regime_fraction mean_classified_fraction regime_auc
+1   mosaic                  0.3686869               0.05060606  0.6766849
+  classified_precision Pc_present elapsed_seconds
+1            0.9001996     0.0732        18.09342
+     scenario generating_regime_fraction mean_classified_fraction regime_auc
+1 decelerated                  0.3838384                0.8368687  0.7070481
+  classified_precision Pc_present elapsed_seconds
+1            0.4509354     0.0428        17.75149

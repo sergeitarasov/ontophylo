@@ -1,10 +1,10 @@
 ---
-title: "From character histories to branch-specific and marginal rates"
+title: "From character histories to branch rates and phenomic metrics"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{From character histories to branch-specific and marginal rates}
+  %\VignetteIndexEntry{From character histories to branch rates and phenomic metrics}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -28,12 +28,11 @@ histories or constructing a stacked-state map.
 
 ## Pipeline and function names
 
-```{r workflow, echo=FALSE, fig.width=8.2, fig.height=8, fig.cap="The full pipeline. Branch and marginal summaries retain map replicates until the final statistical summary. Anatomical groups are processed separately."}
+```{r workflow, echo=FALSE, fig.width=8.2, fig.height=9, fig.cap="The integrated pipeline. Rate regimes, Neff and Pc are calculated separately for every map replicate before summarizing uncertainty."}
 grid::grid.newpage()
 box <- function(x, y, width, height, label, fill = "#E1F1FC") {
-  grid::grid.roundrect(x, y, width, height, r = grid::unit(0.035, "snpc"),
+  grid::grid.roundrect(x, y, width, height, r = grid::unit(0.025, "snpc"),
                        gp = grid::gpar(fill = fill, col = "#555555"))
-  # Generic sans works with both HTML rendering and R's default PDF device.
   grid::grid.text(label, x, y, gp = grid::gpar(fontsize = 10, fontfamily = "sans"))
 }
 arrow <- function(x0, y0, x1, y1) {
@@ -41,29 +40,30 @@ arrow <- function(x0, y0, x1, y1) {
                    arrow = grid::arrow(length = grid::unit(2, "mm")),
                    gp = grid::gpar(col = "#555555"))
 }
-box(0.5, 0.94, 0.64, 0.065, "Dated tree + observations for each character", "#F3F3F3")
-box(0.5, 0.83, 0.76, 0.075, "fit_models()\nCompare Q models independently for each character")
-box(0.5, 0.71, 0.76, 0.075, "paramo_stm()\nSample histories using the fitted Q and root setting")
-box(0.5, 0.59, 0.76, 0.075, "read_stm()\nRead a named list of original character-map samples")
-box(0.5, 0.45, 0.90, 0.105,
+box(0.5, 0.955, 0.76, 0.06, "Dated tree + observations for each character", "#F3F3F3")
+box(0.5, 0.855, 0.84, 0.075, "fit_models()\nCompare Q models independently for each character")
+box(0.5, 0.735, 0.84, 0.085,
+     "paramo_stm() / read_stm()\nSample conditional histories; retain maps or branch counts")
+box(0.5, 0.600, 0.92, 0.10,
      "branch_rate_pipeline()\nCharacter groups + optional per-character normalization\nama_branches_multi_char(): combined branch-rate samples", "#FFF2D5")
-box(0.165, 0.265, 0.30, 0.13,
-     "Branch summaries\nsummarize_branch_rates_multi()\nMean, median, SD, quantiles")
-box(0.5, 0.265, 0.30, 0.13,
-     "Marginal rates\nbranch_rate_thru_time_Multi()\nReplicate curves + summaries")
-box(0.835, 0.265, 0.30, 0.13,
+box(0.165, 0.435, 0.30, 0.14,
+     "Branch samples + summaries\nsummarize_branch_rates_multi()\nplot_branch_colored_tree()")
+box(0.5, 0.435, 0.30, 0.14,
+     "Marginal rates\nbranch_rate_thru_time_Multi()\nplot_marginal_rates()")
+box(0.835, 0.435, 0.30, 0.14,
      "Predefined clade comparisons\nbranch_rate_contrast()\nReplicate differences + ratios")
-box(0.165, 0.08, 0.30, 0.09, "plot_branch_colored_tree()\nBranch-rate tree", "#F3F3F3")
-box(0.5, 0.08, 0.30, 0.09, "plot_marginal_rates()\nCurve + mapping interval", "#F3F3F3")
-arrow(0.5, 0.906, 0.5, 0.87)
-arrow(0.5, 0.791, 0.5, 0.75)
-arrow(0.5, 0.671, 0.5, 0.63)
-arrow(0.5, 0.551, 0.5, 0.506)
-arrow(0.30, 0.396, 0.165, 0.333)
-arrow(0.50, 0.396, 0.50, 0.333)
-arrow(0.70, 0.396, 0.835, 0.333)
-arrow(0.165, 0.198, 0.165, 0.128)
-arrow(0.50, 0.198, 0.50, 0.128)
+box(0.5, 0.265, 0.90, 0.10,
+     "classify_branch_rates()\nget_enrichment_mask(): quantile regimes per region and map", "#E5F3E7")
+box(0.5, 0.100, 0.94, 0.115,
+     "phenomic_metrics()\nphenomic_diversity(): Neff+ and Neff-; phenomic_coordination(): Pc\nTime curves, branch coordination and conditional map intervals", "#E5F3E7")
+arrow(0.5, 0.924, 0.5, 0.894)
+arrow(0.5, 0.816, 0.5, 0.779)
+arrow(0.5, 0.691, 0.5, 0.651)
+arrow(0.30, 0.549, 0.165, 0.506)
+arrow(0.50, 0.549, 0.50, 0.506)
+arrow(0.70, 0.549, 0.835, 0.506)
+arrow(0.165, 0.364, 0.3, 0.317)
+arrow(0.50, 0.214, 0.50, 0.159)
 ```
 
 The diagram names the public entry points. Internally, the higher-order wrapper
@@ -88,6 +88,11 @@ each replicate before calculating uncertainty.
 | `branch_rate_contrast()` | Compare two predefined, disjoint branch sets within each replicate. |
 | `plot_branch_colored_tree()` | Display branch values on a tree. |
 | `plot_marginal_rates()` | Display a marginal curve with pointwise map intervals. |
+| `get_enrichment_mask()` | Classify unusually high/low rates within a region and map. |
+| `classify_branch_rates()` | Obtain both regime arrays, cutoffs and branch classification frequencies. |
+| `phenomic_diversity()` | Calculate Neff from whole anatomical regime patterns. |
+| `phenomic_coordination()` | Calculate Pc from the mean fraction of accelerated regions. |
+| `phenomic_metrics()` | Integrate classification, Neff+, Neff- and Pc through time. |
 
 ## Fit models and sample histories
 
@@ -169,6 +174,122 @@ With `normalize = "characters"`, samples, means, SDs and interval bounds are
 all divided by the number of characters in their group. This makes units
 comparable across differently sized groups; it does not correct differences
 in state spaces or data quality.
+
+## Accelerated and decelerated regimes, Neff and Pc
+
+Select the elementary anatomical regions that define the phenotype. A combined
+whole-phenome group must not be counted as an additional region alongside its
+components. The package warns and records shared characters if regions overlap.
+Here we use three nonoverlapping example groups (one character each); real regions
+can contain many characters.
+
+```{r phenomic-wrapper}
+anatomy <- list(region_A = "char1", region_B = "char2", region_C = "char3")
+phenome <- branch_rate_pipeline(mapped, groups = anatomy,
+                                 normalize = "characters", n_points = 25,
+                                 phenomic = list(lower_q = 0.05, upper_q = 0.95))
+head(phenome$phenomic$summary)
+head(phenome$phenomic$regimes$branch_summary)
+head(phenome$phenomic$regimes$thresholds)
+```
+
+The same calculation can be requested after an existing rate analysis. Original
+maps and disk-backed branch counts give the same result. In either interface,
+thresholds are recomputed **across all branches within each region and map
+replicate**, as in `make-Neff-plus.Rmd`, `make-Neff-minus.Rmd` and `make-Pc.Rmd`.
+They are not pooled across maps, and are not computed separately in each time
+slice. Positive per-character rate normalization therefore leaves classifications
+and phenomic metrics unchanged.
+
+```{r separate-phenomic-functions}
+regimes <- classify_branch_rates(phenome, lower_q = 0.05, upper_q = 0.95)
+dim(regimes$accelerated) # branches x regions x maps
+dim(regimes$decelerated)
+metrics <- phenomic_metrics(phenome, n_points = 25)
+stopifnot(isTRUE(all.equal(metrics, phenome$phenomic)))
+
+# Inspect the rate classification for one map replicate.
+one_map <- matrix(0, nrow(tree$edge), length(anatomy),
+                    dimnames = list(NULL, names(anatomy)))
+for (region in names(anatomy)) {
+  one_map[, region] <- phenome$groups[[region]]$rate_samples[, 1]
+}
+accelerated <- get_enrichment_mask(one_map, 0.05, 0.95, direction = "over")
+decelerated <- get_enrichment_mask(one_map, 0.05, 0.95, direction = "under")
+accelerated_rates <- get_enrichment_mask(one_map, 0.05, 0.95,
+                                         direction = "over", return_type = "masked")
+```
+
+These labels describe high and low **relative branch rates**, not acceleration as
+a derivative along a lineage or a test of a changed Q. Even a homogeneous
+simulation can have branches in the empirical tails. In particular, a top-5%
+rule does not recover every branch in a large accelerated clade.
+
+The original directional scripts include rates equal to the cutoff. This is
+retained with `ties = "include"`; `ties = "exclude"` implements the strict
+"above/below" language in the manuscript. With many zero rates, inclusive
+classification can select far more than 5% of branches as decelerated, while a
+strict lower cutoff of zero selects none. The returned thresholds record actual
+counts, including overlapping high/low selections when cutoffs coincide. Choose
+and report the rule; do not silently switch it after inspecting the results.
+
+A constant region is now unclassified by default, and remains in the denominator.
+Set `constant = "include"` to reproduce the original constant-column behaviour:
+with inclusive ties it classifies every branch as both high and low. The low-level
+helper retains its historical 2.5/97.5% defaults, while the integrated functions
+use the manuscript's 5/95% defaults. The `"both"` mask is always the union of the
+two directional masks; the old helper inconsistently used strict cutoffs only
+for `"both"`.
+
+For a time slice with $N$ branches and $L$ regions, let $E_{b\ell}$ be its 0/1
+acceleration pattern. Phenomic coordination (Pc, formerly enrichment strength,
+$S_e$) is
+
+$$P_c = \frac{1}{N}\sum_{b=1}^N \frac{1}{L}\sum_{\ell=1}^L E_{b\ell}.$$
+
+All branches are included, including those with no accelerated regions. This
+matches `make-Pc.Rmd` and `relative_null_metric(type = "scaled")`; the old
+unscaled helper instead averaged only across enriched branches.
+
+For Neff, let $f^+$ be the fraction of branches with a nonzero pattern and
+$p_i^+$ the frequencies of distinct **whole binary patterns** among those
+branches. Then $H^+ = -\sum_i p_i^+\log(p_i^+)$ and
+$N_{\mathrm{eff}}^+ = f^+\exp(H^+)$. Applying the same formula to the deceleration
+mask gives $N_{\mathrm{eff}}^-$. When there are no enriched branches, Neff and
+the effective-pattern count are set to zero. These are pattern-diversity metrics,
+not entropy over single-region frequencies.
+
+```{r exact-phenomic-examples}
+joint <- rbind(c(1, 1), c(0, 0), c(0, 0), c(0, 0))
+separate <- rbind(c(1, 0), c(0, 1), c(0, 0), c(0, 0))
+phenomic_coordination(joint)       # Pc = 0.25
+phenomic_coordination(separate)    # Pc = 0.25
+phenomic_diversity(joint)          # Neff = 0.25
+phenomic_diversity(separate)       # Neff = 1
+```
+
+Thus Pc measures the extent of accelerated anatomy and can be identical for
+these distinct co-occurrence patterns. It is not a test of coordination beyond
+an independence null. Neff distinguishes their whole-pattern diversity.
+
+```{r phenomic-plot, fig.cap="Pc calculated per map and then summarized. The band contains pointwise conditional map quantiles."}
+pc <- metrics$summary[metrics$summary$metric == "Pc", ]
+plot_marginal_rates(pc, ylab = "Phenomic coordination (Pc)")
+```
+
+`metrics$samples` retains each time-by-map matrix. `metrics$branch_coordination`
+retains branch-by-map accelerated-region fractions. The long summary also
+includes the fraction of enriched lineages, pattern entropy, effective pattern
+count, and mean fraction of decelerated regions. All-zero rows and constant
+regions remain in their respective denominators. Nonlinear metrics are computed
+before averaging maps. Time points and descendant-at-node conventions match
+marginal rates exactly, including the present.
+
+The uncertainty bands remain conditional mapping intervals. They are not
+calibrated tests of rate heterogeneity, anatomical dependence or adaptation, and
+do not incorporate uncertainty in Q, the tree, taxon sampling or region choices.
+Exact-pattern tests, raw-map/count integration tests and a four-scenario simulation
+pilot are provided in `inst/validation/phenomic-metrics/`.
 
 ## Every lower-level function
 
@@ -351,6 +472,56 @@ and run `Rscript --vanilla run-validation.R`. Optional arguments specify the
 output directory, datasets per condition and maps per character. Environment
 variables `ONTO_FIRST_DATASET` and `ONTO_LAST_DATASET` allow disjoint chunks;
 seeds are independent of worker scheduling and completed datasets are reused.
+
+## Phenomic-metric validation
+
+The new four-scenario pilot uses the same fixed 100-tip tree, two nonoverlapping
+regions of ten binary characters, equal root-state frequencies and 25 conditional
+maps per character. It uses the actual `fit_models()` -> `paramo_stm()` ->
+`branch_rate_pipeline(phenomic = list())` route. No taxa or characters are dropped.
+Each scenario is one prespecified dataset, so these are smoke tests, not estimates
+of power or interval coverage.
+
+The conditions are homogeneous rates (0.002/Myr); coordinated tenfold acceleration
+in the same focal young clade for both regions; mosaic tenfold acceleration in
+different young clades; and tenfold deceleration in the focal clade for both
+regions. The generating rate vectors are classified using the same quantile rule
+as the realized and reconstructed event rates. These three targets differ even
+when the actual histories are known, because finite event counts are noisy and
+may include many zeros.
+
+```{r phenomic-validation-summary, echo=FALSE}
+pilot_file <- system.file("validation", "phenomic-metrics", "results",
+                           "pilot-summary.csv", package = "ontophylo")
+pilot <- read.csv(pilot_file)
+knitr::kable(pilot[, c("scenario", "mean_classified_fraction", "regime_auc",
+                       "classified_precision", "Pc_present")], digits = 3,
+              col.names = c("Scenario", "Classified fraction", "Regime AUC",
+                              "Precision", "Present Pc"))
+```
+
+For the two accelerated scenarios, about 90--92% of accelerated calls fall in
+truly elevated-rate branches. However, the 5% tail captures only a subset of a
+much larger shifted clade; AUC based on classification frequency is only about
+0.68--0.70. Under homogeneous rates, about 5% of branch-region entries are still
+classified as accelerated. These calls are empirical tails, not null rejections.
+In the decelerated scenario, inclusive ties classify about 84% as slow because
+of zero event counts; a strict lower cutoff selects none in these pilots.
+Neither rule alone establishes calibrated detection of deceleration.
+
+```{r phenomic-validation-figure, echo=FALSE, out.width="100%", fig.cap="Four fixed simulation pilots. Dotted black curves classify generating rates, dashed orange curves classify the actual histories, and blue curves/bands summarize reconstructed histories (95% conditional map quantiles). All use the same inclusive quantile rule; constant columns are unclassified. These are distinct targets, and the reconstruction does not recover the generating Neff/Pc magnitudes."}
+figure <- system.file("validation", "phenomic-metrics", "results",
+                      "phenomic-pilot.png", package = "ontophylo")
+knitr::include_graphics(figure)
+```
+
+Exact-pattern unit tests separately verify the formulas, including identical Pc
+but different Neff for coordinated versus dispersed patterns. One hundred
+fixed-seed compatibility cases reproduce the original directional masks, Neff,
+and scaled Se/Pc. Thus the implementation is numerically validated, but these
+pilots do not validate Neff/Pc as unbiased estimates of latent regime structure.
+The executable scripts, settings, full results and sensitivity table are in
+`inst/validation/phenomic-metrics/`.
 
 ## Input and uncertainty checks
 

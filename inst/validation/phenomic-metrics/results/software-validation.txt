@@ -1,0 +1,26 @@
+Verified 2026-11-20 on ontophylo devel.
+
+Installed tests: 794 passing assertions, zero failures, warnings or skips.
+96 new assertions cover phenomic formulas, classification, time boundaries,
+replicate pairing, constant/tied rates, invalid input and map/count integration.
+All six new/updated help examples passed separately.
+100 fixed-seed cases reproduce the original masks, Neff and scaled Se/Pc.
+Four prespecified 100-tip pilots completed: 80 fits and 2,000 conditional maps.
+The source package builds; its expanded vignette and standalone extracted R
+script run successfully. The diagram and vector/PNG validation figure were
+visually inspected; the PDF has embedded Arial text.
+
+R CMD check: 1 ERROR, 3 WARNINGs, 3 NOTEs, all in pre-existing package areas.
+The error is the legacy NHPP add_pseudodata() example calling an unexported
+function. Tests and vignette code pass within R CMD check. This is not a clean
+whole-package check. See package-check.log for legacy metadata, documentation,
+LazyData and global-binding diagnostics.
+
+Check command used --no-manual --no-build-vignettes after R CMD build had
+successfully rebuilt the vignette. Unchanged large-data compression and ASCII
+audits were disabled with _R_CHECK_COMPACT_DATA_=false and
+_R_CHECK_ASCII_DATA_=false, as for the previous branch-rate validation.
+
+Implementation is validated numerically; tail labels and map intervals are not
+calibrated tests of latent rate changes or independence-based coordination.
+See README.md, pilot-summary.csv, tie-sensitivity.csv and metric-curves.csv.

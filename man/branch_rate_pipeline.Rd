@@ -12,7 +12,8 @@ branch_rate_pipeline(
   n_points = 100,
   time_points = NULL,
   time_scale = c("root", "age"),
-  marginal = TRUE
+  marginal = TRUE,
+  phenomic = NULL
 )
 }
 \arguments{
@@ -43,6 +44,13 @@ always age before the present.}
 
 \item{marginal}{Also calculate marginal rates through time. Set FALSE for
 branch-only reconstruction, including on non-ultrametric trees.}
+
+\item{phenomic}{NULL (default) skips phenomic metrics. Otherwise supply a
+named list of options for \code{\link[=phenomic_metrics]{phenomic_metrics()}}, such as
+\code{list(groups = c("region_A", "region_B"), upper_q = 0.95)}. An empty list
+uses all groups. Options are \code{groups}, \code{lower_q}, \code{upper_q}, \code{ties}, and
+\code{constant}. The pipeline time grid is reused. Select elementary regions,
+excluding a whole-phenome aggregate, to avoid counting it as another region.}
 }
 \value{
 A list with \code{groups} (one \code{\link[=branch_rates]{branch_rates()}} result per character group),
@@ -51,6 +59,7 @@ recording membership and normalization, and \code{contrasts} containing their
 samples and summaries. Every combined summary row includes a \code{group} ID.
 Raw rate samples remain available in \code{groups[[name]]$rate_samples}.
 \code{input_status} retains the original status table for mapping-result input.
+When requested, \code{phenomic} contains Neff+, Neff-, Pc and regime results.
 }
 \description{
 Combine original stochastic maps into branch-rate samples, summarize their

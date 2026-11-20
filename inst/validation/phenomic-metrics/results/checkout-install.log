@@ -1,0 +1,21 @@
+* installing *source* package ‘ontophylo’ ...
+** this is package ‘ontophylo’ version ‘0.3.0’
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+Could not detect number of cores, defaulting to 1.
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+Could not detect number of cores, defaulting to 1.
+** testing if installed package can be loaded from final location
+Could not detect number of cores, defaulting to 1.
+** testing if installed package keeps a record of temporary installation path
+* DONE (ontophylo)
+Could not detect number of cores, defaulting to 1.
+Verified installation and new exports from actual devel checkout.
